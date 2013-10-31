@@ -3,9 +3,8 @@ require 'omniauth-oauth2'
 module OmniAuth
   module Strategies
     class Mydigipass < OmniAuth::Strategies::OAuth2
-
       def self.default_client_urls(options = {})
-        local_base_uri = options[:sandbox] ? 'https://sandbox.mydigipass.com' : 'https://mydigipass.com'
+        local_base_uri = options[:sandbox] ? 'https://sandbox.mydigipass.com' : 'https://www.mydigipass.com'
         {
           :site          => local_base_uri,
           :authorize_url => local_base_uri + '/oauth/authenticate',
@@ -13,12 +12,11 @@ module OmniAuth
         }
       end
 
-
       # Give your strategy a name.
-      option :name, "mydigipass"
+      option :name, 'mydigipass'
 
       # for the sandbox environment, use http://sandbox.mydigipass.com
-      option :base_uri, "https://mydigipass.com"
+      option :base_uri, 'https://www.mydigipass.com'
 
       #option :client_options, {
       #          :site          => base_uri,
@@ -27,7 +25,6 @@ module OmniAuth
       #        }
 
       option :client_options, default_client_urls
-
 
       # These are called after authentication has succeeded.
       uid { raw_info['uuid'] }
@@ -54,8 +51,6 @@ module OmniAuth
       def base_uri
         default_options[:base_uri]
       end
-
-
     end
   end
 end
