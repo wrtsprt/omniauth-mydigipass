@@ -6,6 +6,14 @@ describe OmniAuth::Strategies::Mydigipass do
     OmniAuth::Strategies::Mydigipass.new('abc', 'def', @options || {})
   end
 
+  before do
+    OmniAuth.config.test_mode = true
+  end
+
+  after do
+    OmniAuth.config.test_mode = false
+  end
+
   it_should_behave_like 'an oauth2 strategy'
 
   describe '#client' do
