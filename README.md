@@ -3,10 +3,9 @@
 This is an OmniAuth strategy for authenticating with MYDIGIPASS.COM.
 
 If you want to integrate your website with MYDIGIPASS.COM, you will need to
-sign up on [developer.mydigipass.com](http://developer.mydigipass.com) and connect your site there.
-You will need to specify a callback url, which with this gem should be something like `http://localhost:3000/auth/mydigipass/callback`.
-
-Then you will get a `client_id` and `client_secret` you need to fill in here.
+sign up on [developer.mydigipass.com](http://developer.mydigipass.com) and
+connect your site there. Then you will get a `client_id` and `client_secret`
+you need to fill in here.
 
 
 ## Basic Usage
@@ -32,7 +31,8 @@ end
 
 ## Example Application
 
-I have added a small working example application, using Sinatra. Check it out in the `example` folder. To make it work just type `rackup` in the folder.
+I have added a small working example application, using Sinatra. Check it out
+in the `example` folder. To make it work just type `rackup` in the folder.
 
 
 ## Example Integrating with Rails
@@ -42,7 +42,7 @@ Add an initializer `mydigipass.rb` containing your application specific configur
 ```ruby
 # MYDIGIPASS.COM OAuth configuration
 
-MDP_JS_SRC="http://static.mydigipass.com/en/dp_connect.js"
+MDP_JS_SRC="https://static.mydigipass.com/en/dp_connect.js"
 
 if Rails.env.production?
   MDP_CLIENT_ID="<your-production-client-id>"
