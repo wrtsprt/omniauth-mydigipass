@@ -1,0 +1,31 @@
+<html>
+  <body>
+    <h1>Authenticated via provider '<%= @auth.provider %>'</h1>
+    <h2>Info</h2>
+    <ul>
+      <%- @auth.info.each do |key, value| %>
+        <li><strong><%= key %>:</strong> <%= value.inspect %></li>
+      <% end %>
+    </ul>
+
+    <a href="/signout" class="dpplus-logout" data-origin="<%= CLIENT_OPTIONS[:site] %>" data-client-id="<%= CLIENT_ID %>">Sign out</a>
+
+    <h2>Raw auth information</h2>
+    <pre style="white-space: pre-wrap"><%= Rack::Utils.escape_html @auth.inspect %></pre>
+
+    <h2>Connected users</h2>
+    <p>
+      Users connected to your application:
+    </p>
+    <ul>
+      <% if @users.empty? %>
+        <li>No users connected</li>
+      <% else %>
+        <% @users.each do |user| %>
+          <li><b><%= user %></b> (<a href="/disconnect/<%= user %>">disconnect</a>)</li>
+        <% end %>
+      <% end %>
+    </ul>
+    <a href='/connect/<%= @auth.uid %>'>Connect the current user (<b><%= @auth.uid %></b>)</a>
+  </body>
+</html>
