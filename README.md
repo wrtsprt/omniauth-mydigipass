@@ -34,6 +34,12 @@ end
 I have added a small working example application, using Sinatra. Check it out
 in the `example` folder. To make it work just type `rackup` in the folder.
 
+Aside from signin in with MYDIGIPASS.COM, the example application also
+showcases the calls needed to interface with the Connection API. This API
+is described in more detail in the
+[MDP Developer documentation](https://developer.mydigipass.com/).
+
+
 
 ## Example Integrating with Rails
 
