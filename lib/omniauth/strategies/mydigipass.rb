@@ -1,17 +1,11 @@
 require 'omniauth-oauth2'
+require 'mydigipass/tools'
 
 module OmniAuth
   module Strategies
     class Mydigipass < OmniAuth::Strategies::OAuth2
-      def self.default_client_urls(options = {})
-        base_uri = if options.has_key? :base_uri
-                     options[:base_uri]
-                   elsif options.has_key? :sandbox
-                     'https://sandbox.mydigipass.com'
-                   else
-                     'https://www.mydigipass.com'
-                   end
-
+      def self.default_client_urls(options = { })
+        base_uri = ::Mydigipass::Tools.extract_base_uri_from_options(options)
         {
           :site          => base_uri,
           :authorize_url => base_uri + '/oauth/authenticate',
