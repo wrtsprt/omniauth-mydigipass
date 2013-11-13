@@ -2,33 +2,60 @@ require 'bundler/setup'
 require 'sinatra'
 require 'omniauth'
 require 'omniauth-mydigipass'
+require 'mydigipass'
 
+# Replace these with your own credentials.
+CLIENT_ID = 'dp3m8qzbmas5cy67ksrvg4076'
+CLIENT_SECRET = '1s105mlw99bqxzl70igmvkhmm'
+
+OMNIAUTH_CLIENT_OPTIONS = OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true)
+CONNECT_API_OPTIONS = { :client_id => CLIENT_ID, :client_secret => CLIENT_SECRET, :sandbox => true }
 
 class App < Sinatra::Base
   get '/' do
-    content_type 'text/html'
-    <<-HTML
-      <h1>Test OAuth2 with MYDIGIPASS.COM</h1>
-      <script  type="text/javascript" src="https://sandbox.mydigipass.com/dp_connect.js"></script>
-      <a class="dpplus-connect" data-client-id="2z4z3zn6ezuov82e4dfu73q3z" data-redirect-uri="http://localhost:3002/auth/mydigipass/callback" href="#">connect with mydigipass.com</a>
-    HTML
+    @auth = session['auth']
+    if @auth.nil?
+      redirect '/signin'
+    else
+      @users = Mydigipass::ConnectApi.new(CONNECT_API_OPTIONS).all_connected
+      erb :index
+    end
+  end
+
+  get '/signin' do
+    erb :signin
+  end
+
+  get '/signout' do
+    session['auth'] = nil
+    redirect '/signin'
   end
 
   get '/auth/:name/callback' do
-    @auth = request.env['omniauth.auth']
-    erb :callback
+    session['auth'] = request.env['omniauth.auth']
+    redirect '/'
   end
 
   get '/auth/failure' do
+    session['auth'] = nil
     @request = request
     erb :failure
+  end
+
+  get '/connect/:uuid' do
+    Mydigipass::ConnectApi.new(CONNECT_API_OPTIONS).connected(params[:uuid])
+    redirect '/'
+  end
+
+  get '/disconnect/:uuid' do
+    Mydigipass::ConnectApi.new(CONNECT_API_OPTIONS).disconnected(params[:uuid])
+    redirect '/'
   end
 end
 
 use Rack::Session::Cookie
 use OmniAuth::Builder do
-  provider :mydigipass, '2z4z3zn6ezuov82e4dfu73q3z', '1mcskxim7nomrafvfg7s36pjv',
-           :client_options => OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true)
+  provider :mydigipass, CLIENT_ID, CLIENT_SECRET, :client_options => OMNIAUTH_CLIENT_OPTIONS
 end
 
 run App.new

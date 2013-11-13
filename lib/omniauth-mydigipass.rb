@@ -1,2 +1,2 @@
-require "omniauth-mydigipass/version"
+require 'omniauth-mydigipass/version'
 require 'omniauth/strategies/mydigipass'

@@ -1,33 +1,21 @@
 require 'omniauth-oauth2'
+require 'mydigipass/tools'
 
 module OmniAuth
   module Strategies
     class Mydigipass < OmniAuth::Strategies::OAuth2
-
-      def self.default_client_urls(options = {})
-        local_base_uri = options[:sandbox] ? 'https://sandbox.mydigipass.com' : 'https://mydigipass.com'
+      def self.default_client_urls(options = { })
+        base_uri = ::Mydigipass::Tools.extract_base_uri_from_options(options)
         {
-          :site          => local_base_uri,
-          :authorize_url => local_base_uri + '/oauth/authenticate',
-          :token_url     => local_base_uri + '/oauth/token'
+          :site          => base_uri,
+          :authorize_url => base_uri + '/oauth/authenticate',
+          :token_url     => base_uri + '/oauth/token'
         }
       end
 
-
-      # Give your strategy a name.
-      option :name, "mydigipass"
-
-      # for the sandbox environment, use http://sandbox.mydigipass.com
-      option :base_uri, "https://mydigipass.com"
-
-      #option :client_options, {
-      #          :site          => base_uri,
-      #          :authorize_url => base_uri + '/oauth/authenticate',
-      #          :token_url     => base_uri + '/oauth/token'
-      #        }
-
+      option :name, 'mydigipass'
       option :client_options, default_client_urls
-
+      option :provider_ignores_state, true
 
       # These are called after authentication has succeeded.
       uid { raw_info['uuid'] }
@@ -44,18 +32,12 @@ module OmniAuth
       end
 
       extra do
-        {'raw_info' => raw_info}
+        { 'raw_info' => raw_info }
       end
 
       def raw_info
         @raw_info ||= access_token.get('/oauth/user_data').parsed
       end
-
-      def base_uri
-        default_options[:base_uri]
-      end
-
-
     end
   end
 end
