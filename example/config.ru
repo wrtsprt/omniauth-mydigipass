@@ -5,8 +5,8 @@ require 'omniauth-mydigipass'
 require 'mydigipass'
 
 # Replace these with your own credentials.
-CLIENT_ID = 'dp3m8qzbmas5cy67ksrvg4076'
-CLIENT_SECRET = '1s105mlw99bqxzl70igmvkhmm'
+CLIENT_ID = '5o67b0giz20pttdcjenjtyyj5'
+CLIENT_SECRET = '39fcfebcwfegu1sqedxq8f8vt'
 
 OMNIAUTH_CLIENT_OPTIONS = OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true)
 CONNECT_API_OPTIONS = { :client_id => CLIENT_ID, :client_secret => CLIENT_SECRET, :sandbox => true }
@@ -23,6 +23,7 @@ class App < Sinatra::Base
   end
 
   get '/signin' do
+    @state = session['omniauth.state'] = SecureRandom.hex(24)
     erb :signin
   end
 

@@ -2,6 +2,6 @@
   <body>
     <h1>Test OAuth2 with MYDIGIPASS.COM</h1>
     <script  type="text/javascript" src="https://static.mydigipass.com/en/dp_connect.js"></script>
-    <a class="dpplus-connect" data-origin="<%= OMNIAUTH_CLIENT_OPTIONS[:site] %>" data-client-id="<%= CLIENT_ID %>" data-redirect-uri="http://localhost:9292/auth/mydigipass/callback" href="#">connect with mydigipass.com</a>
+    <a class="dpplus-connect" data-origin="<%= OMNIAUTH_CLIENT_OPTIONS[:site] %>" data-client-id="<%= CLIENT_ID %>" data-redirect-uri="http://localhost:9292/auth/mydigipass/callback" data-state="<%= @state %>" href="#">connect with mydigipass.com</a>
   </body>
 </html>
