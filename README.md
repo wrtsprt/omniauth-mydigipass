@@ -104,7 +104,7 @@ def auth_create
 end
 ```
 
-There are two possible ways to use `MYDIGIPASS.COM`:
+There are two possible ways to use MYDIGIPASS.COM:
 * when someone is signing in with MYDIGIPASS.COM which does not have an account, immediately sign them up
 * only allow users you know to sign in with MYDIGIPASS.COM
 
