@@ -15,7 +15,6 @@ module OmniAuth
 
       option :name, 'mydigipass'
       option :client_options, default_client_urls
-      option :provider_ignores_state, true
 
       # These are called after authentication has succeeded.
       uid { raw_info['uuid'] }
