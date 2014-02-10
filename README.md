@@ -1,4 +1,4 @@
-# OmniAuth Mydigipass.com
+# OmniAuth Mydigipass
 
 This is an OmniAuth strategy for authenticating with MYDIGIPASS.COM.
 
@@ -6,6 +6,10 @@ If you want to integrate your website with MYDIGIPASS.COM, you will need to
 sign up on [developer.mydigipass.com](http://developer.mydigipass.com) and
 connect your site there. Then you will get a `client_id` and `client_secret`
 you need to fill in here.
+
+It is recommended to use the OAuth `state` parameter to prevent CSRF
+attacks. Omniauth actually enables this behaviour by default. Usage of the
+state parameter is illustrated in the example app.
 
 
 ## Basic Usage
@@ -27,20 +31,6 @@ use OmniAuth::Builder do
   provider :mydigipass, ENV['MYDIGIPASS_CLIENT_ID'], ENV['MYDIGIPASS_CLIENT_SECRET']
 end
 ```
-
-
-## Example Application
-
-I have added a small working example application, using Sinatra. Check it out
-in the `example` folder. To make it work just type `rackup` in the folder.
-
-Aside from signing in with MYDIGIPASS.COM, the example application also
-shows how to use the Connect API through a simple HTTParty wrapper that can
-be found in `lib/mydigipass/connect_api.rb`.
-
-The Connect API and its purpose is described in more detail in the
-[MDP Developer documentation](https://developer.mydigipass.com/).
-
 
 
 ## Example Integrating with Rails
@@ -87,7 +77,58 @@ match '/auth/:provider/callback', :to => 'home#auth_create'
 match '/auth/failure', :to => 'home#auth_failure'
 ```
 
-Then, inside your `HomeController` you could write:
+
+### Rendering the button
+
+On the login page and/or signup page, you can show the MYDIGIPASS.COM button
+as follows:
+
+```ruby
+= link_to("connect with mydigipass.com", "#", :class => "dpplus-connect",
+                                              :"data-origin" => MDP_ORIGIN,
+                                              :"data-client-id" => MDP_CLIENT_ID,
+                                              :"data-redirect-uri" => MDP_CALLBACK_URL,
+                                              :"data-state" => @state)
+```
+
+and also include the `dp_connect.js` Javascript file:
+
+```ruby
+%script{:type => 'text/javascript', :src => MDP_JS_SRC}
+```
+
+Since you can potentially link a MYDIGIPASS.COM account to an
+existing account on your site, you have to protect against CSRF attacks.
+For this reason, every time you render a view with the above link,
+you have to generate a new random CSRF-protection `state` token.
+This token must be stored in two places:
+
+1. in the `data-state` attribute of the link itself (see above code),
+2. in the `omniauth.state` session variable.
+
+To generate a suitable token, you can put the following code in the
+controller action or even in the view itself:
+
+```ruby
+@state = session['omniauth.state'] = SecureRandom.hex(24)
+```
+
+When Omniauth is processing the OAuth call, it will compare the
+`state` parameter passed back in by MIDIGPASS.COM to the `omniauth.state`
+parameter stored in the user's session. If the tokens do not match, Omniauth
+will conclude that the authentication was originally initiated in another
+browser session and abort the remainder of the flow.
+
+> Note: If you use the `state` parameter for CSRF protection, you must
+> register a separate autoconnect URL (which is usually the URL of the
+> login page of your application) with MYDIGIPASS.COM to enable users to
+> sign in from our launchpad.
+
+
+### Handling the callback
+
+To handle the actual callback, you can use something like the following
+`auth_create` implementation inside your `HomeController`:
 
 ```ruby
 def auth_failure
@@ -95,45 +136,6 @@ def auth_failure
   redirect_to root_path
 end
 
-def auth_create
-  authorization_hash = request.env['omniauth.auth'].with_indifferent_access
-  received_uuid = auth_hash[:extra][:raw_info][:uuid]
-  received_email = auth_hash[:extra][:raw_info][:email]
-
-  # use `received_uuid` or `received_email` to find (or create) a user and sign her in
-end
-```
-
-There are two possible ways to use MYDIGIPASS.COM:
-* when someone is signing in with MYDIGIPASS.COM which does not have an account, immediately sign them up
-* only allow users you know to sign in with MYDIGIPASS.COM
-
-I will explain those two scenarios in more detail.
-
-> Note: I am assuming you have a `User` model, and that the user has a field called `uuid` that can or will contain the MYDIGIPASS.COM `uuid`.
-> You can change these names as you like.
-
-
-### Scenario 1: unknown users are automatically signed up
-
-On the login page and signup page, we show the MYDIGIPASS.COM button as follows:
-
-```ruby
-= link_to("connect with mydigipass.com", "#", :class => "dpplus-connect",
-                                              :"data-origin" => MDP_ORIGIN,
-                                              :"data-client-id" => MDP_CLIENT_ID,
-                                              :"data-redirect-uri" => MDP_CALLBACK_URL)
-```
-
-and also include the Javascript:
-
-```ruby
-%script{:type => 'text/javascript', :src => MDP_JS_SRC}
-```
-
-Inside your `HomeController` you can use the following `auth_create` implementation:
-
-```ruby
 def auth_create
   user = User.find_or_create_from_auth_hash(request.env['omniauth.auth'].with_indifferent_access)
   logger.debug "Found or created user: #{user.email} [#{user.id}]"
@@ -147,8 +149,9 @@ def auth_create
 end
 ```
 
-When a user signs in through MYDIGIPASS.COM, it could be a new user (signing up), or an existing user.
-The function `find_or_create_from_auth_hash` handles that for me:
+When a user signs in through MYDIGIPASS.COM, it could be a new user
+(signing up), or an existing user. The function `find_or_create_from_auth_hash`
+handles that for me:
 
 ```ruby
 def self.find_or_create_from_auth_hash(auth_hash)
@@ -161,94 +164,25 @@ def self.find_or_create_from_auth_hash(auth_hash)
 end
 ```
 
-I try to find the user, by `uuid` or `email`. If I find the user by `uuid`, she has logged on before with MYDIGIPASS.COM
-If I find a matching mail, link the uuid to that user. If I do not find a user, create one with the given `email` and `uuid`.
-I also made sure that users can then only login with their MYDIGIPASS.COM and no longer normally, but that is optional of course.
+I try to find the user, by `uuid` or `email`. If I find the user by `uuid`,
+she has logged on before with MYDIGIPASS.COM If I find a matching mail,
+link the uuid to that user. If I do not find a user, create one with the
+given `email` and `uuid`. I also made sure that users can then only login
+with their MYDIGIPASS.COM and no longer normally, but that is optional
+of course.
 
 
-### Scenario 2: only known users can sign in
+## Example Application
 
-This scenario is a little more complicated, but offers more protection as well:
+I have added a small working example application, using Sinatra. Check it out
+in the `example` folder. To make it work just type `rackup` in the folder.
 
-* a user that is already signed in, can link her MYDIGIPASS.COM account
-* a user that we do not know, is not allowed to sign in
+Aside from signing in with MYDIGIPASS.COM, the example application also
+shows how to use the Connect API through a simple HTTParty wrapper that can
+be found in `lib/mydigipass/connect_api.rb`.
 
-So when a user has signed in, conventionally, we want to enable her to link her MYDIGIPASS.COM to her current account.
-Normally (depending on your application) there is a profile page, or settings, or properties, where a user can edit her details.
-On that page we show a button to link her MYDIGIPASS.COM account as follows:
-
-```haml
-- if @user.id == current_user.id
-  - if @user.uuid.present?
-    %p{:style => 'padding-top: 5px;'}
-      Your account is linked with MYDIGIPASS.COM.
-  - else
-    .connect-with-mydigipass
-      %h3
-        Connect with your MYDIGIPASS account
-      %p
-        If you have a MYDIGIPASS.COM account, it is preferred to use that
-        instead to login, so please connect here.
-      .mdp-button-spacer{:style => 'padding-top: 5px;'}
-        = link_to("connect with mydigipass.com", "#", :class => "dpplus-connect",
-                                                      :"data-origin" => MDP_ORIGIN,
-                                                      :"data-client-id" => MDP_CLIENT_ID,
-                                                      :"data-redirect-uri" => MDP_CALLBACK_URL,
-                                                      :"data-style" => 'large',
-                                                      :"data-state" => @user.id)
-```
-
-The important thing to notice is that the link contains an extra parameter called `data-state`: this can contain any data you wish, and that will be received verbatim in your callback.
-We will use this in the callback.
-
-On the login form you show the button as follows:
-
-```haml
-= link_to("connect with mydigipass.com", "#", :class => "dpplus-connect",
-                                              :"data-client-id" => MDP_CLIENT_ID,
-                                              :"data-redirect-uri" => MDP_CALLBACK_URL)
-```
-
-And of course, on all pages where you show the MYDIGIPASS.COM button, include the `dp_connect.js` script:
-
-```haml
-%script{:type => 'text/javascript', :src => MDP_JS_SRC}
-```
-
-Inside your `HomeController` add the `auth_create` which will handle both signin in and connecting the account, as follows:
-
-```ruby
-def auth_create
-  connect_to_user_id = params[:state]
-  auth_hash = request.env['omniauth.auth'].with_indifferent_access
-  connected_uuid = auth_hash[:extra][:raw_info][:uuid]
-
-  if connect_to_user_id
-    user = User.find(connect_to_user_id)
-    user.will_sign_in_with_mydigipass(connected_uuid) if user
-  else
-    user = User.find_by_uuid(connected_uuid)
-  end
-
-  if user
-    flash[:notice] = if connect_to_user_id
-      "Your account is successfully linked to your MYDIGIPASS.COM account! From now on you can only sign in using MYDIGIPASS.COM. Thank you!"
-    else
-      # do we need to show this ??
-      "Succesfully logged in using MYDIGPASS.COM."
-    end
-    @current_user = user
-    @user_session = UserSession.create!(user)
-  else
-    flash[:error] = if connect_to_user_id
-      "Something went wrong when trying to connect your user with your MYDIGIPASS.COM account ..."
-    else
-      "Your MYDIGIPASS.COM is not yet linked to a valid user account. You need to sign in with your exisiting account first, and then link the account (from the profile page). HTH."
-    end
-  end
-  redirect_back_or_default root_path
-end
-```
+The Connect API and its purpose is described in more detail in the
+[MDP Developer documentation](https://developer.mydigipass.com/).
 
 Hope this helps.
 
