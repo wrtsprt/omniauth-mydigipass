@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["nathan@dixis.com"]
   gem.summary       = %Q{OmniAuth strategy for MYDIGIPASS.COM}
   gem.description   = %Q{OmniAuth strategy for MYDIGIPASS.COM, which can be used for sandbox or production}
-  gem.homepage      = "https://github.com/nathanvda/omniauth-mydigipass"
+  gem.homepage      = "https://github.com/vasco-data-security/omniauth-mydigipass"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
