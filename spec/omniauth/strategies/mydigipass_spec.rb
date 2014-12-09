@@ -35,11 +35,4 @@ describe OmniAuth::Strategies::Mydigipass do
       subject.callback_path.should eq('/auth/mydigipass/callback')
     end
   end
-
-  context 'when connecting to the sandbox' do
-    it 'should have the correct mydigipass.com site' do
-      @options = { :client_options => OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true) }
-      subject.client.site.should == 'https://sandbox.mydigipass.com'
-    end
-  end
 end

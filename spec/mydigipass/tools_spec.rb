@@ -12,11 +12,7 @@ describe Mydigipass::Tools do
     end
 
     context 'with explicit base_uri' do
-      Mydigipass::Tools.extract_base_uri_from_options({ :base_uri => 'https://www.foo.com', :sandbox => true }).should == 'https://www.foo.com'
-    end
-
-    context 'with sandbox option' do
-      Mydigipass::Tools.extract_base_uri_from_options({ :sandbox => true }).should == 'https://sandbox.mydigipass.com'
+      Mydigipass::Tools.extract_base_uri_from_options({ :base_uri => 'https://www.foo.com'}).should == 'https://www.foo.com'
     end
   end
 end
