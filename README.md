@@ -4,7 +4,8 @@ This is an OmniAuth strategy for authenticating with MYDIGIPASS.COM.
 
 If you want to integrate your website with MYDIGIPASS.COM, you will need to
 sign up on [developer.mydigipass.com](http://developer.mydigipass.com) and
-connect your site there. Then you will get a `client_id` and `client_secret`
+create an application. Checkout our [Getting Started Guide](https://developer.mydigipass.com/getting_started)
+for step by step instructions of setting up your application. You will get a `client_id` and `client_secret`
 you need to fill in here.
 
 It is recommended to use the OAuth `state` parameter to prevent CSRF
@@ -14,17 +15,7 @@ state parameter is illustrated in the example app.
 
 ## Basic Usage
 
-If you are testing your application in the sandbox environment, initialize
-the strategy as follows:
-
-```ruby
-use OmniAuth::Builder do
-  provider :mydigipass, ENV['MYDIGIPASS_CLIENT_ID'], ENV['MYDIGIPASS_CLIENT_SECRET'],
-                        :client_options => OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true)
-end
-```
-
-Once your application goes in production, you can just write:
+Initialize the strategy as follows:
 
 ```ruby
 use OmniAuth::Builder do
@@ -35,23 +26,21 @@ end
 
 ## Example Integrating with Rails
 
-Add an initializer `mydigipass.rb` containing your application specific configuration:
+Add an initializer `mydigipass.rb` containing your application specific configuration. Testing on your local
+machine is possible using a localhost redirect URI.
 
 ```ruby
 # MYDIGIPASS.COM OAuth configuration
 
 MDP_JS_SRC="https://static.mydigipass.com/en/dp_connect.js"
 
+MDP_CLIENT_ID="<your-production-client-id>"
+MDP_CLIENT_SECRET="<your-production-client-secret>"
+
 if Rails.env.production?
-  MDP_CLIENT_ID="<your-production-client-id>"
-  MDP_CLIENT_SECRET="<your-production-client-secret>"
   MDP_CALLBACK_URL="<your-production-base-url>/auth/mydigipass/callback"
-  MDP_ORIGIN="https://www.mydigipass.com"
 else
-  MDP_CLIENT_ID="<your-sandbox-client-id>"
-  MDP_CLIENT_SECRET="<your-sandbox-client-secret>"
   MDP_CALLBACK_URL="http://localhost:3000/auth/mydigipass/callback"
-  MDP_ORIGIN="https://sandbox.mydigipass.com"
 end
 ```
 
@@ -60,12 +49,7 @@ Inside your `config/application.rb` add the following (e.g. at the bottom, insid
 ```ruby
 # enable omniauth strategies
 Rails.application.config.middleware.use OmniAuth::Builder do
-  if Rails.env.production?
-    provider :mydigipass, MDP_CLIENT_ID, MDP_CLIENT_SECRET
-  else
-    provider :mydigipass, MDP_CLIENT_ID, MDP_CLIENT_SECRET,
-             :client_options => OmniAuth::Strategies::Mydigipass.default_client_urls(:sandbox => true)
-  end
+  provider :mydigipass, MDP_CLIENT_ID, MDP_CLIENT_SECRET
 end
 ```
 
@@ -78,14 +62,14 @@ match '/auth/failure', :to => 'home#auth_failure'
 ```
 
 
-### Rendering the button
+### Rendering the Secure Login button
 
 On the login page and/or signup page, you can show the MYDIGIPASS.COM button
 as follows:
 
 ```ruby
 = link_to("connect with mydigipass.com", "#", :class => "dpplus-connect",
-                                              :"data-origin" => MDP_ORIGIN,
+                                              :"data-is-sandbox" => true,
                                               :"data-client-id" => MDP_CLIENT_ID,
                                               :"data-redirect-uri" => MDP_CALLBACK_URL,
                                               :"data-state" => @state)
@@ -164,18 +148,19 @@ def self.find_or_create_from_auth_hash(auth_hash)
 end
 ```
 
-I try to find the user, by `uuid` or `email`. If I find the user by `uuid`,
-she has logged on before with MYDIGIPASS.COM If I find a matching mail,
-link the uuid to that user. If I do not find a user, create one with the
-given `email` and `uuid`. I also made sure that users can then only login
-with their MYDIGIPASS.COM and no longer normally, but that is optional
-of course.
+Find the user, by `uuid` or `email`. If user is found by `uuid`,
+she has logged on before with MYDIGIPASS.COM.  If a matching mail is found,
+link the uuid to that user. If user isn't found, create one with the
+given `email` and `uuid`.
+
+Should users only be allowed to to login via MYDIGIPASS.COM, the other sign in method has to be disabled.
+This step is optional.
 
 
 ## Example Application
 
-I have added a small working example application, using Sinatra. Check it out
-in the `example` folder. To make it work just type `rackup` in the folder.
+There is a small, fully working Sinatra based example application in the `example` folder.
+To make it work just type `rackup` in the folder.
 
 Aside from signing in with MYDIGIPASS.COM, the example application also
 shows how to use the Connect API through a simple HTTParty wrapper that can
@@ -183,8 +168,6 @@ be found in `lib/mydigipass/connect_api.rb`.
 
 The Connect API and its purpose is described in more detail in the
 [MDP Developer documentation](https://developer.mydigipass.com/).
-
-Hope this helps.
 
 
 ## License
