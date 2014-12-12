@@ -54,7 +54,7 @@ class App < Sinatra::Base
   end
 end
 
-use Rack::Session::Cookie
+use Rack::Session::Cookie, secret: 'verysecret'
 use OmniAuth::Builder do
   provider :mydigipass, CLIENT_ID, CLIENT_SECRET, :client_options => OMNIAUTH_CLIENT_OPTIONS
 end
